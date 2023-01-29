@@ -31,7 +31,7 @@
     - eval $(ssh-agent); ssh-add <(echo "$HOME_SSH_PRIVATE_KEY" | base64 -d);
     - echo -n "$HOME_ANSIBLE_VAULT_KEY" > ansible/.vault
     # - ansible-galaxy role install -r ansible/requirements.yml -f 
-    - ansible-galaxy collection install -r ansible/requirements.yml -f 
+    # - ansible-galaxy collection install -r ansible/requirements.yml -f 
 
 stages:
   - deploy
