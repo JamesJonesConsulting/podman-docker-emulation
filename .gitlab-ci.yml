@@ -29,20 +29,23 @@
     - git clone -b $VAULT_BRANCH --single-branch $VAULT_REPO ansible/vault
   script: &rpm_build_script
     - |
+        rm -Rf dist
         mkdir -p dist
         fpm -s dir -t rpm -n podman-docker-emulation -v ${VERSION} --iteration ${GITHUB_RUN_NUMBER} \
+        -d podman-docker \
         --description "podman-docker-emulation: Sets up user docker socket emulation and linger support for CI agents that only support docker" \
         --url "https://github.com/JamesJonesConsulting/podman-docker-emulation" \
         --license "MIT" --vendor "James Jones" --maintainer "James Jones <jamjon3@gmail.com>" \
+        -p ./dist \
         --after-upgrade ./bin/after.sh \
         --after-install ./bin/after.sh \
-        -p ./dist \
-        ./bin/podman-docker-user-del=/usr/bin/podman-docker-user-del \
+        ./bin/podman-docker-user-add=/usr/bin/podman-docker-user-add \
         ./bin/podman-docker-user-del=/usr/bin/podman-docker-user-del \
         ./tmpfiles.d/podman.conf=/etc/tmpfiles.d/podman.conf \
         ./systemd/system/podman.socket.d/override.conf=/etc/systemd/system/podman.socket.d/override.conf
         PACKAGE_FILE=$(find . -type f -name "podman-docker-emulation*.rpm")
         echo "$PACKAGE_FILE"
+
 
     # - eval $(ssh-agent); ssh-add <(echo "$HOME_SSH_PRIVATE_KEY" | base64 -d);
     # - echo -n "$HOME_ANSIBLE_VAULT_KEY" > ansible/.vault
