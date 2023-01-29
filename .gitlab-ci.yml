@@ -27,9 +27,26 @@
   before_script: &clone_ansible_resources_before_script
     - git clone -b $INVENTORY_BRANCH --single-branch $INVENTORY_REPO ansible/inventory
     - git clone -b $VAULT_BRANCH --single-branch $VAULT_REPO ansible/vault
-  script: &clone_ansible_resources_script
-    - eval $(ssh-agent); ssh-add <(echo "$HOME_SSH_PRIVATE_KEY" | base64 -d);
-    - echo -n "$HOME_ANSIBLE_VAULT_KEY" > ansible/.vault
+  script: &rpm_build_script
+    - |
+        mkdir -p dist
+        fpm -s dir -t rpm -n podman-docker-emulation -v ${VERSION} --iteration ${GITHUB_RUN_NUMBER} \
+        -d podman-docker \
+        --description "podman-docker-emulation: Sets up user docker socket emulation and linger support for CI agents that only support docker" \
+        --url "https://github.com/JamesJonesConsulting/podman-docker-emulation" \
+        --license "MIT" --vendor "James Jones" --maintainer "James Jones <jamjon3@gmail.com>" \
+        -p ./dist \
+        --after-upgrade ./bin/after.sh \
+        --after-install ./bin/after.sh \
+        ./bin/podman-docker-user-del=/usr/bin/podman-docker-user-del \
+        ./bin/podman-docker-user-del=/usr/bin/podman-docker-user-del \
+        ./tmpfiles.d/podman.conf=/etc/tmpfiles.d/podman.conf \
+        ./systemd/system/podman.socket.d/override.conf=/etc/systemd/system/podman.socket.d/override.conf
+        PACKAGE_FILE=$(find . -type f -name "podman-docker-emulation*.rpm")
+        echo "$PACKAGE_FILE"
+
+    # - eval $(ssh-agent); ssh-add <(echo "$HOME_SSH_PRIVATE_KEY" | base64 -d);
+    # - echo -n "$HOME_ANSIBLE_VAULT_KEY" > ansible/.vault
     # - ansible-galaxy role install -r ansible/requirements.yml -f 
     # - ansible-galaxy collection install -r ansible/requirements.yml -f 
 
@@ -64,8 +81,8 @@ build:prereleases:
   # before_script:
   #   - *before_auth
   script:
-    - export RPM_TAG=$(echo -en $CI_COMMIT_REF_NAME | cut -d '/' -f 2)-$(echo -en $CI_COMMIT_REF_NAME | cut -d '/' -f 1)^$CI_COMMIT_SHORT_SHA
-    - echo "$RPM_TAG"
+    - export VERSION=$(echo -en $CI_COMMIT_REF_NAME | cut -d '/' -f 2)-$(echo -en $CI_COMMIT_REF_NAME | cut -d '/' -f 1)^$CI_COMMIT_SHORT_SHA
+    - echo "$VERSION"
     # - *build_push
   only:
     - branches
@@ -82,8 +99,8 @@ build:releases:
   # before_script:
   #   - *before_auth
   script:
-    - export RPM_TAG=$CI_COMMIT_TAG
-    - echo "$RPM_TAG"
+    - export VERSION=$CI_COMMIT_TAG
+    - echo "$VERSION"
     # - *build_push
     # - docker tag "$REGISTRY_IMAGE_LOWER:$IMAGE_TAG" "$REGISTRY_IMAGE_LOWER:latest"
     # - docker push "$REGISTRY_IMAGE_LOWER:latest"
