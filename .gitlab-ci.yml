@@ -36,31 +36,31 @@
 stages:
   - build
 
-deploy:
-  extends: .base
-  stage: deploy
-  timeout: 3h 30m
-  variables:
-    <<: *clone_ansible_resources_variables
-    ANSIBLE_DEPLOY_GROUP: grafana
-    ANSIBLE_VAULT_VARIABLES_FILE: vault/home/grafana/grafana.yml
-  # environment:
-  #   name: production
-  #   action: prepare
-  tags:
-    - pfsense
-  before_script:
-    - *clone_ansible_resources_before_script
-  script:
-    - *clone_ansible_resources_script
-    - ls -all
-    # - ansible-playbook -i ansible/inventory/home/hosts --vault-password-file ansible/.vault ansible/playbook.yml --extra-vars "host_or_group=$ANSIBLE_DEPLOY_GROUP grafana_vaulted_variables=$ANSIBLE_VAULT_VARIABLES_FILE" -b
+# deploy:
+#   extends: .base
+#   stage: deploy
+#   timeout: 3h 30m
+#   variables:
+#     <<: *clone_ansible_resources_variables
+#     ANSIBLE_DEPLOY_GROUP: grafana
+#     ANSIBLE_VAULT_VARIABLES_FILE: vault/home/grafana/grafana.yml
+#   # environment:
+#   #   name: production
+#   #   action: prepare
+#   tags:
+#     - pfsense
+#   before_script:
+#     - *clone_ansible_resources_before_script
+#   script:
+#     - *clone_ansible_resources_script
+#     - ls -all
+#     # - ansible-playbook -i ansible/inventory/home/hosts --vault-password-file ansible/.vault ansible/playbook.yml --extra-vars "host_or_group=$ANSIBLE_DEPLOY_GROUP grafana_vaulted_variables=$ANSIBLE_VAULT_VARIABLES_FILE" -b
 
 build:prereleases:
-  stage: dind-build
+  stage: build
   extends: .base
   tags:
-    - build
+    - big-build
   before_script:
     - *before_auth
   script:
