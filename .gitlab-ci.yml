@@ -36,7 +36,6 @@
         --license "MIT" --vendor "James Jones" --maintainer "James Jones <jamjon3@gmail.com>" \
         --after-upgrade ./bin/after.sh \
         --after-install ./bin/after.sh \
-        -d podman-docker \
         -p ./dist \
         ./bin/podman-docker-user-del=/usr/bin/podman-docker-user-del \
         ./bin/podman-docker-user-del=/usr/bin/podman-docker-user-del \
