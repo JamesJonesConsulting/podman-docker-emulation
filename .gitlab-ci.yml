@@ -71,6 +71,7 @@ build:prereleases:
     - branches
   except:
     - main
+    - develop
 
 build:releases:
   extends: .base
