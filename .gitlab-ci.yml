@@ -61,8 +61,8 @@ build:prereleases:
   extends: .base
   tags:
     - big-build
-  before_script:
-    - *before_auth
+  # before_script:
+  #   - *before_auth
   script:
     - export RPM_TAG=$(echo -en $CI_COMMIT_REF_NAME | sed 's|/|-|g')
     - echo "$RPM_TAG"
@@ -77,8 +77,8 @@ build:releases:
   stage: build
   tags:
     - big-build
-  before_script:
-    - *before_auth
+  # before_script:
+  #   - *before_auth
   script:
     - export RPM_TAG=$CI_COMMIT_TAG
     - echo "$RPM_TAG"
