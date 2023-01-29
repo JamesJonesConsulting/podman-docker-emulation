@@ -1,0 +1,56 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+# stages:
+# - test
+# sast:
+#   stage: test
+# include:
+# - template: Security/SAST.gitlab-ci.yml
+
+.base:
+  # See https://gitlab.com/gitlab-org/cluster-integration/cluster-applications/
+  variables:
+    DOCKER_AUTH_CONFIG: ${HOME_NEXUS_DOCKER_AUTH_CONFIG}
+  image: "$HOME_NEXUS_DOCKER_REGISTRY/jamesjonesconsulting/podman-dind-like:latest"
+
+.clone_ansible_resources:
+  variables: &clone_ansible_resources_variables
+    INVENTORY_REPO: https://github.com/JamesJonesConsulting/AnsibleInventory.git
+    INVENTORY_BRANCH: main
+    VAULT_REPO: https://github.com/JamesJonesConsulting/AnsibleVault.git
+    VAULT_BRANCH: main
+  before_script: &clone_ansible_resources_before_script
+    - git clone -b $INVENTORY_BRANCH --single-branch $INVENTORY_REPO ansible/inventory
+    - git clone -b $VAULT_BRANCH --single-branch $VAULT_REPO ansible/vault
+  script: &clone_ansible_resources_script
+    - eval $(ssh-agent); ssh-add <(echo "$HOME_SSH_PRIVATE_KEY" | base64 -d);
+    - echo -n "$HOME_ANSIBLE_VAULT_KEY" > ansible/.vault
+    # - ansible-galaxy role install -r ansible/requirements.yml -f 
+    - ansible-galaxy collection install -r ansible/requirements.yml -f 
+
+stages:
+  - deploy
+
+deploy:
+  extends: .base
+  stage: deploy
+  timeout: 3h 30m
+  variables:
+    <<: *clone_ansible_resources_variables
+    ANSIBLE_DEPLOY_GROUP: grafana
+    ANSIBLE_VAULT_VARIABLES_FILE: vault/home/grafana/grafana.yml
+  # environment:
+  #   name: production
+  #   action: prepare
+  tags:
+    - pfsense
+  before_script:
+    - *clone_ansible_resources_before_script
+  script:
+    - *clone_ansible_resources_script
+    # - ansible-playbook -i ansible/inventory/home/hosts --vault-password-file ansible/.vault ansible/playbook.yml --extra-vars "host_or_group=$ANSIBLE_DEPLOY_GROUP grafana_vaulted_variables=$ANSIBLE_VAULT_VARIABLES_FILE" -b

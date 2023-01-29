@@ -1,4 +1,4 @@
-name: Build podman-dind-like
+name: Build podman-docker-emulation
 
 on:
   push:
