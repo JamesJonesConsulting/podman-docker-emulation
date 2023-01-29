@@ -83,7 +83,7 @@ build:prereleases:
   script:
     - export VERSION=$(echo -en $CI_COMMIT_REF_NAME | cut -d '/' -f 2)-$(echo -en $CI_COMMIT_REF_NAME | cut -d '/' -f 1)^$CI_COMMIT_SHORT_SHA
     - echo "$VERSION"
-    # - *build_push
+    - *rpm_build_script
   only:
     - branches
   except:
@@ -101,7 +101,7 @@ build:releases:
   script:
     - export VERSION=$CI_COMMIT_TAG
     - echo "$VERSION"
-    # - *build_push
+    - *rpm_build_script
     # - docker tag "$REGISTRY_IMAGE_LOWER:$IMAGE_TAG" "$REGISTRY_IMAGE_LOWER:latest"
     # - docker push "$REGISTRY_IMAGE_LOWER:latest"
   only:
