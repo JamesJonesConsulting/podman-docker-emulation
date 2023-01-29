@@ -1,2 +1,38 @@
 #!/bin/bash
 
+while [ $# -gt 0 ]; do
+  if [[ $1 == "--"* ]]; then
+    v="${1/--/}"
+    if [ $v = "linger" ]; then
+      declare "$v"="yes"
+    else
+      declare "$v"="$2"
+      shift
+    fi
+  fi
+  shift
+done
+
+user=${user:-user_does_not_exist}
+linger=${linger:-no}
+
+if id "$user" &>/dev/null; then
+  uid=$(id -u $user)
+  current_usergroups=( $(groups $user | cut -d : -f 2 | xargs) )
+  # declare -p current_usergroups
+  if printf '%s\n' "${current_usergroups[@]}" | grep -q -P '^docker$'; then
+    gpasswd -d $user docker
+    echo "Logout and re-login required after removing user $user from docker group"
+  fi
+else
+  echo 'user not found'
+  exit 1
+fi
+
+if [ $linger = "yes" ]; then
+  # Remove the podman tmpfiles permission setup
+  rm -f /etc/tmpfiles.d/podman-${user}.conf
+  systemd-tmpfiles --create
+  echo "Disabling linger for user $user"
+  loginctl disable-linger $user
+fi

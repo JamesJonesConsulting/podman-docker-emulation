@@ -1,1 +1,46 @@
 #!/bin/bash
+
+while [ $# -gt 0 ]; do
+  if [[ $1 == "--"* ]]; then
+    v="${1/--/}"
+    if [ $v = "linger" ]; then
+      declare "$v"="yes"
+    else
+      declare "$v"="$2"
+      shift
+    fi
+  fi
+  shift
+done
+
+user=${user:-user_does_not_exist}
+linger=${linger:-no}
+
+if id "$user" &>/dev/null; then
+  uid=$(id -u $user)
+  current_usergroups=( $(groups $user | cut -d : -f 2 | xargs) )
+  # declare -p current_usergroups
+  if printf '%s\n' "${current_usergroups[@]}" | grep -q -P '^docker$'; then
+    echo "User $user already in docker group... no change"
+  else
+    echo "Adding user $user to docker group"
+    usermod -aG docker $user
+    echo "Reboot required after adding user to docker group"
+  fi
+else
+  echo 'User not found'
+  exit 1
+fi
+
+if [ $linger = "yes" ]; then
+  # Create the podman tmpfiles permission setup
+  cat >/etc/tmpfiles.d/podman-${user}.conf << EOL
+d /run/user/$uid 0770 $user docker
+d /run/user/$uid/containers 0770 $user docker
+d /run/user/$uid/libpod 0770 $user docker
+EOL
+  echo "Setting up temp files for linger user"
+  systemd-tmpfiles --create
+  echo "Enabling linger for user $user"
+  loginctl enable-linger $user
+fi
