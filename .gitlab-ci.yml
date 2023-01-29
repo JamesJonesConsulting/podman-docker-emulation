@@ -34,7 +34,7 @@
     # - ansible-galaxy collection install -r ansible/requirements.yml -f 
 
 stages:
-  - deploy
+  - build
 
 deploy:
   extends: .base
@@ -55,3 +55,35 @@ deploy:
     - *clone_ansible_resources_script
     - ls -all
     # - ansible-playbook -i ansible/inventory/home/hosts --vault-password-file ansible/.vault ansible/playbook.yml --extra-vars "host_or_group=$ANSIBLE_DEPLOY_GROUP grafana_vaulted_variables=$ANSIBLE_VAULT_VARIABLES_FILE" -b
+
+build:prereleases:
+  stage: dind-build
+  extends: .base
+  tags:
+    - build
+  before_script:
+    - *before_auth
+  script:
+    - export RPM_TAG=$(echo -en $CI_COMMIT_REF_NAME | sed 's|/|-|g')
+    - echo "$RPM_TAG"
+    # - *build_push
+  only:
+    - branches
+  except:
+    - main
+
+build:releases:
+  extends: .base
+  stage: build
+  tags:
+    - big-build
+  before_script:
+    - *before_auth
+  script:
+    - export RPM_TAG=$CI_COMMIT_TAG
+    - echo "$RPM_TAG"
+    # - *build_push
+    # - docker tag "$REGISTRY_IMAGE_LOWER:$IMAGE_TAG" "$REGISTRY_IMAGE_LOWER:latest"
+    # - docker push "$REGISTRY_IMAGE_LOWER:latest"
+  only:
+    - tags
