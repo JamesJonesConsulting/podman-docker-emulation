@@ -72,6 +72,7 @@ build:prereleases:
   except:
     - main
     - develop
+    - 'feature/**'
 
 build:releases:
   extends: .base
