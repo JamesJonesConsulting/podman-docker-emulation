@@ -64,7 +64,6 @@ build:prereleases:
   # before_script:
   #   - *before_auth
   script:
-    - export RPM_TAG=$(echo -en $CI_COMMIT_REF_NAME | sed 's|/|-|g')
     - export RPM_TAG=$(echo -en $CI_COMMIT_REF_NAME | cut -d '/' -f 2)-$(echo -en $CI_COMMIT_REF_NAME | cut -d '/' -f 1)^$CI_COMMIT_SHORT_SHA
     - echo "$RPM_TAG"
     # - *build_push
