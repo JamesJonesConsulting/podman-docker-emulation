@@ -45,6 +45,12 @@
         ./systemd/system/podman.socket.d/override.conf=/etc/systemd/system/podman.socket.d/override.conf
         PACKAGE_FILE=$(find . -type f -name "podman-docker-emulation*.rpm")
         echo "$PACKAGE_FILE"
+        curl https://nexus.jamesjonesconsulting.com/repository/gpg/RPM-GPG-KEY-JAMESJONESCONSULTING --output ./dist/RPM-GPG-KEY-JAMESJONESCONSULTING --silent
+        echo "$HOME_GPG_PRIVATE_KEY" > gpg.key
+        echo "$HOME_GPG_PRIVATE_KEY_PASSWORD" | gpg --batch --import gpg.key
+        rpm --define "_gpg_name $HOME_GPG_KEY_NAME" \
+            --define "_gpg_sign_cmd_extra_args --pinentry-mode loopback --passphrase $HOME_GPG_PRIVATE_KEY_PASSWORD" \
+            --addsign $PACKAGE_FILE
 
 
     # - eval $(ssh-agent); ssh-add <(echo "$HOME_SSH_PRIVATE_KEY" | base64 -d);
