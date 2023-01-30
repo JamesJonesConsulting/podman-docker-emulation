@@ -32,7 +32,7 @@
         rm -Rf dist
         mkdir -p dist
         fpm -s dir -t rpm -n podman-docker-emulation -v ${VERSION} --iteration ${GITHUB_RUN_NUMBER} \
-        -d podman-docker \
+        --depends podman-docker \
         --description "podman-docker-emulation: Sets up user docker socket emulation and linger support for CI agents that only support docker" \
         --url "https://github.com/JamesJonesConsulting/podman-docker-emulation" \
         --license "MIT" --vendor "James Jones" --maintainer "James Jones <jamjon3@gmail.com>" \
